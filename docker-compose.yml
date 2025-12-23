@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce_redis
+    ports:
+      - "6480:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecommerce_backend
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      REDIS_ADDR: redis:6379
+      BACKEND_ADDR: backend-api:50051
+      BACKEND_INSECURE: "true"
+      APP_ENV: development
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    # Para hot reload durante desarrollo (requiere air)
+    # command: air
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: ecommerce_network
+    driver: bridge
