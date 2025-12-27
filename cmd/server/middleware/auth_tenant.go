@@ -16,8 +16,9 @@ func AuthTenantMiddleware(c *fiber.Ctx) error {
 		})
 	}
 
-	for _, tenantID := range []string{"tenant1", "pepe", "tenant3"} {
+	for _, tenantID := range []string{"tenant5", "daniel", "test"} {
 		if parts[0] == tenantID {
+			c.Locals("tenant_identifier", tenantID)
 			return c.Next()
 		}
 	}
