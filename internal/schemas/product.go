@@ -1,5 +1,7 @@
 package schemas
 
+import "mime/multipart"
+
 type CategoryResponse struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
@@ -61,3 +63,7 @@ type ProductRequest struct {
     Sort       *SortBy `json:"sort" query:"sort"`
 }
 
+type ProductUploadSchema struct {
+	PrimaryImage *multipart.FileHeader `form:"primaryImage"`
+	SecondaryImages []*multipart.FileHeader `form:"secondaryImage"`
+}

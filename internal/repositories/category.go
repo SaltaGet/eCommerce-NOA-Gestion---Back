@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/DanielChachagua/ecommerce-noagestion-protos/pb"
+	"github.com/SaltaGet/ecommerce-fiber-ms/internal/schemas"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -18,7 +19,7 @@ func (repo *CategoryRepository) CategoryGetAll(tenantID string) ([]*pb.Category,
 	outCtx := metadata.NewOutgoingContext(ctxt, md)
 	resp, err := repo.Client.ListCategories(outCtx, catReq)
 	if err != nil {
-		return nil, err
+		return nil, schemas.HandlerErrorGrpc(err)
 	}
 
 	return resp.Categories, nil

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	// Tus imports
+	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/jobs"
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/logging"
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/middleware"
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/routes"
@@ -16,9 +17,17 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 
+	"github.com/gofiber/swagger"
+	_ "github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/docs"
 	// Importa tu paquete generado (Asegúrate que la ruta sea la correcta)
 )
 
+//	@title			APP NOA Gestion Ecommerce API
+//	@version		1.0
+//	@description	This is a api to app noa gestion ecommerce microservice.
+//	@contact.name	Daniel Chachagua
+//	@contact.email	danielmchachagua@gmail.com
+//	@termsOfService	http://swagger.io/terms/
 func main() {
 	// ... (Carga de .env y Logging igual que antes) ...
 	if _, err := os.Stat(".env"); err == nil {
@@ -28,6 +37,13 @@ func main() {
 	}
 	logging.InitLogging()
 	cfg := config.Load()
+
+	local := os.Getenv("LOCAL")
+	if local == "true" {
+		if err := jobs.GenerateSwagger(); err != nil {
+			log.Fatal().Err(err).Msg("Error ejecutando swag init")
+		}
+	}
 
 	// ... (Configuración de target gRPC igual que antes) ...
 	secretKey := os.Getenv("INTERNAL_SERVICE_KEY")
@@ -65,6 +81,7 @@ func main() {
 	// app.Use(middleware.AuthTenantMiddleware)
 	routes.SetupRoutes(app, deps)
 	app.Get("/health", healthHandler)
+	app.Get("/ecommerce/:tenantID/api/swagger/*", swagger.HandlerDefault)
 
 	serverAddr := fmt.Sprintf(":%d", cfg.Port)
 	go func() {

@@ -6,7 +6,7 @@ import (
 )
 
 func TenantRoutes(app *fiber.App, ctrl *controllers.TenantController) {
-	tenant := app.Group("/api/v1/tenant")
+	tenant := app.Group("/ecommerce/:tenantID/api/v1/tenant")
 
 	tenant.Get("/get_all", ctrl.TenantGetAll)
 }

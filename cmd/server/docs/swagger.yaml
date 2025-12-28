@@ -1,0 +1,217 @@
+definitions:
+  schemas.Category:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  schemas.CategoryResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  schemas.ProductResponse:
+    properties:
+      category:
+        $ref: '#/definitions/schemas.CategoryResponse'
+      code:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: number
+      url_image:
+        items:
+          type: string
+        type: array
+    type: object
+  schemas.ProductResponseDTO:
+    properties:
+      category:
+        $ref: '#/definitions/schemas.CategoryResponse'
+      code:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+      stock:
+        type: number
+      url_image:
+        type: string
+    type: object
+  schemas.Response:
+    properties:
+      body: {}
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+  schemas.TenantResponse:
+    properties:
+      expiration:
+        type: string
+      identifier:
+        type: string
+      is_active:
+        type: boolean
+    type: object
+info:
+  contact:
+    email: danielmchachagua@gmail.com
+    name: Daniel Chachagua
+  description: This is a api to app noa gestion ecommerce microservice.
+  termsOfService: http://swagger.io/terms/
+  title: APP NOA Gestion Ecommerce API
+  version: "1.0"
+paths:
+  /ecommerce/{tenantID}/api/v1/category/get_all:
+    get:
+      consumes:
+      - application/json
+      description: Obtener todas las categorías disponibles
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/schemas.Response'
+            - properties:
+                body:
+                  items:
+                    $ref: '#/definitions/schemas.Category'
+                  type: array
+              type: object
+      summary: CategoryGetAll
+      tags:
+      - Category
+  /ecommerce/{tenantID}/api/v1/product/get_by_code:
+    get:
+      consumes:
+      - application/json
+      description: Obtener un producto por su código
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/schemas.Response'
+            - properties:
+                body:
+                  $ref: '#/definitions/schemas.ProductResponse'
+              type: object
+      summary: ProductGetByCode
+      tags:
+      - Product
+  /ecommerce/{tenantID}/api/v1/product/get_page:
+    get:
+      consumes:
+      - application/json
+      description: Obtener un producto por su código
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/schemas.Response'
+            - properties:
+                body:
+                  $ref: '#/definitions/schemas.ProductResponseDTO'
+              type: object
+      summary: ProductGetByCode
+      tags:
+      - Product
+  /ecommerce/{tenantID}/api/v1/product/save_image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Guardar imagenes de producto
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      - description: Token de validación
+        in: formData
+        name: token
+        required: true
+        type: string
+      - description: Imagen principal del producto
+        in: formData
+        name: primaryImage
+        required: true
+        type: file
+      - description: Imágenes secundarias (puedes enviar varias)
+        in: formData
+        name: secondaryImage
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.Response'
+      summary: ProductSaveImage
+      tags:
+      - Product
+  /ecommerce/{tenantID}/api/v1/tenant/get_all:
+    get:
+      consumes:
+      - application/json
+      description: Obtener todos los tenants
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/schemas.Response'
+            - properties:
+                body:
+                  items:
+                    $ref: '#/definitions/schemas.TenantResponse'
+                  type: array
+              type: object
+      summary: TenantGetAll
+      tags:
+      - Tenant
+swagger: "2.0"

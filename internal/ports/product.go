@@ -10,9 +10,11 @@ import (
 type ProductRepository interface {
 	ProductGetByCode(code string, tenantID string, ctx context.Context) (*pb.Product, error)
 	ProductGetPage(req *schemas.ProductRequest, tenantID string, ctx context.Context) (*pb.ListProductsResponse, error)
+	ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, ctx context.Context) error
 }
 
 type ProductService interface {
 	ProductGetByCode(code string, tenantID string, ctx context.Context) (*schemas.ProductResponse, error)
 	ProductGetPage(req *schemas.ProductRequest, tenantID string, ctx context.Context) ([]schemas.ProductResponseDTO, int64, error)
+	ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, ctx context.Context) error
 }
