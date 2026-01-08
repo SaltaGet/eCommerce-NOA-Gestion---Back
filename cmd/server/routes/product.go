@@ -11,5 +11,5 @@ func ProductRoutes(app *fiber.App, ctrl *controllers.ProductController) {
 
 	product.Get("/get_by_code", ctrl.ProductGetByCode)
 	product.Get("/get_page", ctrl.ProductGetPage)
-	product.Post("/save_image", middleware.AuthImage, ctrl.ProductSaveImage)
+	product.Post("/upload_image", middleware.AuthImageProduct, ctrl.ProductSaveImage)
 }

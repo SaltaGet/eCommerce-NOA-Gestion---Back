@@ -1,6 +1,10 @@
 package utils
 
-import "github.com/google/uuid"
+import (
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 func Ternary[T any](cond bool, a, b T) T {
     if cond {
@@ -19,4 +23,12 @@ func IsValidUUIDv7(id string) bool {
 
 	// 2. Verificar si la versión es la 7
 	return parsed.Version() == 7
+}
+
+func SplitStrings(ptr *string) []string {
+    if ptr == nil || *ptr == "" {
+        return []string{}
+    }
+
+    return strings.Split(*ptr, ",")
 }

@@ -3,6 +3,9 @@ package utils
 import (
 	"fmt"
 	"image"
+	_ "image/gif"  // Registra el decodificador GIF
+	_ "image/jpeg" // Registra el decodificador JPEG
+	_ "image/png"  // Registra el decodificador PNG
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -14,51 +17,47 @@ import (
 	"github.com/nfnt/resize"
 )
 
-func GenerateUrl(ctx *fiber.Ctx, tenantID, filename, size string) string {
-	if size != "p200" && size != "p500" {
-		size = "p500"
+func GenerateUrl(ctx *fiber.Ctx, tenantID string, filename *string, size string) *string {
+	if filename == nil {
+		return nil
 	}
 
-	filenameSize := fmt.Sprintf("%s%s.webp", filename, size)
+	filenameSize := fmt.Sprintf("%s%s.webp", *filename, size)
 	url := fmt.Sprintf("%s/ecommerce/%s/api/v1/image/get/%s", ctx.BaseURL(), tenantID, filenameSize)
-	return url
+	return &url
 }
 
 func GetPath(tenantID, filename string) (string, bool) {
-    if filepath.Ext(filename) != ".webp" {
-        return "", false
-    }
+	safeFilename := filepath.Base(filename)
+	filePath := filepath.Join("media", tenantID, safeFilename)
 
-    safeFilename := filepath.Base(filename)
-    filePath := filepath.Join("media", tenantID, safeFilename)
+	info, err := os.Stat(filePath)
+	if err != nil || info.IsDir() {
+		return "", false
+	}
 
-    info, err := os.Stat(filePath)
-    if err != nil || info.IsDir() {
-        return "", false
-    }
-
-    return filePath, true
+	return filePath, true
 }
 
 func IsWebP(path string) bool {
-    f, err := os.Open(path)
-    if err != nil {
-        return false
-    }
-    defer f.Close()
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
 
-    // Leemos los primeros 512 bytes para detectar el tipo
-    buffer := make([]byte, 512)
-    _, err = f.Read(buffer)
-    if err != nil {
-        return false
-    }
+	// Leemos los primeros 512 bytes para detectar el tipo
+	buffer := make([]byte, 512)
+	_, err = f.Read(buffer)
+	if err != nil {
+		return false
+	}
 
-    contentType := http.DetectContentType(buffer)
-    return contentType == "image/webp"
+	contentType := http.DetectContentType(buffer)
+	return contentType == "image/webp"
 }
 
-func SaveTenantImages(tenantID string, file *multipart.FileHeader) ([]string, string, error) {
+func SaveTenantImages(tenantID string, file *multipart.FileHeader, sizeSmall, sizeBig uint) ([]string, string, error) {
 	// 1. Validar tamaño (2MB)
 	if file.Size > 2*1024*1024 {
 		return nil, "", fmt.Errorf("el archivo excede el límite de 2MB")
@@ -94,8 +93,8 @@ func SaveTenantImages(tenantID string, file *multipart.FileHeader) ([]string, st
 		suffix string
 		pixels uint
 	}{
-		{"p200", 200},
-		{"p500", 500},
+		{fmt.Sprintf("p%d", sizeSmall), sizeSmall},
+		{fmt.Sprintf("p%d", sizeBig), sizeBig},
 	}
 
 	var savedPaths []string
@@ -114,11 +113,11 @@ func SaveTenantImages(tenantID string, file *multipart.FileHeader) ([]string, st
 		if err != nil {
 			return nil, "", err
 		}
-		
+
 		// Codificar a WebP (Calidad 80)
 		err = webp.Encode(f, newImg, &webp.Options{Lossless: false, Quality: 80})
 		f.Close()
-		
+
 		if err != nil {
 			return nil, "", err
 		}
@@ -129,10 +128,13 @@ func SaveTenantImages(tenantID string, file *multipart.FileHeader) ([]string, st
 	return savedPaths, baseUUID, nil
 }
 
-func DeleteTenantImages(tenantID string, baseUUID string) error {
+func DeleteTenantImages(tenantID string, baseUUID string, sizeSmall, sizeBig uint) error {
+	if baseUUID == "" {
+		return nil
+	}
 	// 1. Definir los sufijos que manejamos en la subida
-	variants := []string{"p200", "p500"}
-	
+	variants := []string{fmt.Sprintf("p%d", sizeSmall), fmt.Sprintf("p%d", sizeBig)}
+
 	targetDir := filepath.Join("media", tenantID)
 	var errorsList []error
 

@@ -27,12 +27,14 @@ definitions:
         type: string
       price:
         type: number
-      stock:
-        type: number
-      url_image:
+      primary_image:
+        type: string
+      secondary_images:
         items:
           type: string
         type: array
+      stock:
+        type: number
     type: object
   schemas.ProductResponseDTO:
     properties:
@@ -46,10 +48,10 @@ definitions:
         type: string
       price:
         type: number
+      primary_image:
+        type: string
       stock:
         type: number
-      url_image:
-        type: string
     type: object
   schemas.Response:
     properties:
@@ -105,6 +107,31 @@ paths:
       summary: CategoryGetAll
       tags:
       - Category
+  /ecommerce/{tenantID}/api/v1/image/get/{filename}:
+    get:
+      consumes:
+      - application/json
+      description: Obtener imagen
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      - description: codigo del producto
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+      summary: ImageGet
+      tags:
+      - Image
   /ecommerce/{tenantID}/api/v1/product/get_by_code:
     get:
       consumes:
@@ -114,6 +141,11 @@ paths:
       - description: ID del Tenant
         in: path
         name: tenantID
+        required: true
+        type: string
+      - description: codigo del producto
+        in: query
+        name: code
         required: true
         type: string
       produces:
@@ -142,6 +174,21 @@ paths:
         name: tenantID
         required: true
         type: string
+      - description: pagina
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: limite
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - description: tamaño de la pagina
+        in: query
+        name: page_size
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -157,31 +204,45 @@ paths:
       summary: ProductGetByCode
       tags:
       - Product
-  /ecommerce/{tenantID}/api/v1/product/save_image:
+  /ecommerce/{tenantID}/api/v1/product/upload_image:
     post:
       consumes:
       - multipart/form-data
-      description: Guardar imagenes de producto
+      description: |-
+        ### Flujo de Carga de Imágenes
+        Genera un token temporal desde la API principal para subir imágenes al microservicio.
+
+        **Endpoitn de la api princial para pedir token:**
+        ~~~
+        POST /api/v1/product/generate_token_to_image
+        ~~~
+
+        **Pasos requeridos:**
+        1. Incluir el token en el header `x-token-tenant`.
+
+        > *Nota: El token tiene una validez limitada de 30 minutos.*
       parameters:
       - description: ID del Tenant
         in: path
         name: tenantID
         required: true
         type: string
-      - description: Token de validación
-        in: formData
-        name: token
+      - description: Token o ID de validación personalizada
+        in: header
+        name: x-token-tenant
         required: true
         type: string
       - description: Imagen principal del producto
         in: formData
         name: primaryImage
-        required: true
         type: file
-      - description: Imágenes secundarias (puedes enviar varias)
+      - collectionFormat: csv
+        description: Imágenes secundarias (puedes enviar varias)
         in: formData
+        items:
+          type: file
         name: secondaryImage
-        type: file
+        type: array
       produces:
       - application/json
       responses:
@@ -192,11 +253,17 @@ paths:
       summary: ProductSaveImage
       tags:
       - Product
-  /ecommerce/{tenantID}/api/v1/tenant/get_all:
+  /ecommerce/{tenantID}/api/v1/tenant/get:
     get:
       consumes:
       - application/json
-      description: Obtener todos los tenants
+      description: Obtener tenant
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -211,7 +278,53 @@ paths:
                     $ref: '#/definitions/schemas.TenantResponse'
                   type: array
               type: object
-      summary: TenantGetAll
+      summary: TenantGet
+      tags:
+      - Tenant
+  /ecommerce/{tenantID}/api/v1/tenant/upload_image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        ### Flujo de Carga de Imágenes
+        Genera un token temporal desde la API principal para subir imágenes al microservicio.
+
+        **Endpoitn de la api princial para pedir token:**
+        ~~~
+        POST /api/v1/tenant/generate_token_to_image_setting
+        ~~~
+
+        **Pasos requeridos:**
+        1. Incluir el token en el header `x-token-tenant`.
+
+        > *Nota: El token tiene una validez limitada de 30 minutos.*
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      - description: Token o ID de validación personalizada
+        in: header
+        name: x-token-tenant
+        required: true
+        type: string
+      - description: Imagen del logo
+        in: formData
+        name: logoImage
+        type: file
+      - description: Imágen de la portada
+        in: formData
+        name: frontPageImage
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.Response'
+      summary: TenantSaveImage
       tags:
       - Tenant
 swagger: "2.0"

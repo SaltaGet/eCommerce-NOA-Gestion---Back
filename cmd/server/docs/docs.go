@@ -66,6 +66,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/ecommerce/{tenantID}/api/v1/image/get/{filename}": {
+            "get": {
+                "description": "Obtener imagen",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Image"
+                ],
+                "summary": "ImageGet",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "codigo del producto",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/ecommerce/{tenantID}/api/v1/product/get_by_code": {
             "get": {
                 "description": "Obtener un producto por su código",
@@ -85,6 +122,13 @@ const docTemplate = `{
                         "description": "ID del Tenant",
                         "name": "tenantID",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "codigo del producto",
+                        "name": "code",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -130,6 +174,27 @@ const docTemplate = `{
                         "name": "tenantID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "pagina",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limite",
+                        "name": "limit",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "tamaño de la pagina",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -154,9 +219,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/ecommerce/{tenantID}/api/v1/product/save_image": {
+        "/ecommerce/{tenantID}/api/v1/product/upload_image": {
             "post": {
-                "description": "Guardar imagenes de producto",
+                "description": "### Flujo de Carga de Imágenes\nGenera un token temporal desde la API principal para subir imágenes al microservicio.\n\n**Endpoitn de la api princial para pedir token:**\n~~~\nPOST /api/v1/product/generate_token_to_image\n~~~\n\n**Pasos requeridos:**\n1. Incluir el token en el header ` + "`" + `x-token-tenant` + "`" + `.\n\n\u003e *Nota: El token tiene una validez limitada de 30 minutos.*",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -177,20 +242,23 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Token de validación",
-                        "name": "token",
-                        "in": "formData",
+                        "description": "Token o ID de validación personalizada",
+                        "name": "x-token-tenant",
+                        "in": "header",
                         "required": true
                     },
                     {
                         "type": "file",
                         "description": "Imagen principal del producto",
                         "name": "primaryImage",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
                     },
                     {
-                        "type": "file",
+                        "type": "array",
+                        "items": {
+                            "type": "file"
+                        },
+                        "collectionFormat": "csv",
                         "description": "Imágenes secundarias (puedes enviar varias)",
                         "name": "secondaryImage",
                         "in": "formData"
@@ -206,9 +274,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/ecommerce/{tenantID}/api/v1/tenant/get_all": {
+        "/ecommerce/{tenantID}/api/v1/tenant/get": {
             "get": {
-                "description": "Obtener todos los tenants",
+                "description": "Obtener tenant",
                 "consumes": [
                     "application/json"
                 ],
@@ -218,7 +286,16 @@ const docTemplate = `{
                 "tags": [
                     "Tenant"
                 ],
-                "summary": "TenantGetAll",
+                "summary": "TenantGet",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -239,6 +316,57 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    }
+                }
+            }
+        },
+        "/ecommerce/{tenantID}/api/v1/tenant/upload_image": {
+            "post": {
+                "description": "### Flujo de Carga de Imágenes\nGenera un token temporal desde la API principal para subir imágenes al microservicio.\n\n**Endpoitn de la api princial para pedir token:**\n~~~\nPOST /api/v1/tenant/generate_token_to_image_setting\n~~~\n\n**Pasos requeridos:**\n1. Incluir el token en el header ` + "`" + `x-token-tenant` + "`" + `.\n\n\u003e *Nota: El token tiene una validez limitada de 30 minutos.*",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenant"
+                ],
+                "summary": "TenantSaveImage",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token o ID de validación personalizada",
+                        "name": "x-token-tenant",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Imagen del logo",
+                        "name": "logoImage",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Imágen de la portada",
+                        "name": "frontPageImage",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.Response"
                         }
                     }
                 }
@@ -289,14 +417,17 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "stock": {
-                    "type": "number"
+                "primary_image": {
+                    "type": "string"
                 },
-                "url_image": {
+                "secondary_images": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "stock": {
+                    "type": "number"
                 }
             }
         },
@@ -318,11 +449,11 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
+                "primary_image": {
+                    "type": "string"
+                },
                 "stock": {
                     "type": "number"
-                },
-                "url_image": {
-                    "type": "string"
                 }
             }
         },

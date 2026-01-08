@@ -10,6 +10,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ImageGet godoc
+//
+//	@Summary		ImageGet
+//	@Description	Obtener imagen
+//	@Tags			Image
+//	@Accept			json
+//	@Produce		json
+//	@Param			tenantID	path		string	true	"ID del Tenant"
+//	@Param			filename	path		string	true	"codigo del producto"
+//	@Success		200			{object}	any
+//	@Router			/ecommerce/{tenantID}/api/v1/image/get/{filename} [get]
 func ImageGet(c *fiber.Ctx) error {
 	tenantID := c.Locals("tenant_identifier").(string)
 	filename := c.Params("filename")

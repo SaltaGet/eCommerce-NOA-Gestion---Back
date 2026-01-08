@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthImage(c *fiber.Ctx) error {
+func AuthImageProduct(c *fiber.Ctx) error {
 	token := c.Get("x-token-tenant")
 	if token == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(schemas.Response{
@@ -39,8 +39,30 @@ func AuthImage(c *fiber.Ctx) error {
 	if tenantID != tenantIdentifier {
 		return schemas.ErrorResponse(400, "tenant no válido", errors.New("los tenant no coinciden"))
 	}
+
+	keep, ok := mapClaims["keep"].(string)
+	if !ok {
+		return schemas.ErrorResponse(400, "claims no válido", errors.New("keep inválido"))
+	}
+	remove, ok := mapClaims["remove"].(string)
+	if !ok {
+		return schemas.ErrorResponse(400, "claims no válido", errors.New("remove inválido"))
+	}
+	primaryImage, ok := mapClaims["primary_image"].(string)
+	if !ok {
+		return schemas.ErrorResponse(400, "claims no válido", errors.New("imagen principal no valida"))
+	}
+	add, ok := mapClaims["add"].(float64)
+	if !ok {
+		return schemas.ErrorResponse(400, "claims no válido", errors.New("add no valido"))
+	}
 	
 	c.Locals("product_id", productID)
+
+	c.Locals("keep", keep)
+	c.Locals("remove", remove)
+	c.Locals("primary_image", primaryImage)
+	c.Locals("add", add)
 
 	return c.Next()
 }

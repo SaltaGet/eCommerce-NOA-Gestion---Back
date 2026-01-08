@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/SaltaGet/ecommerce-fiber-ms/internal/dependencies"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -12,29 +13,27 @@ func AuthTenantMiddleware(c *fiber.Ctx) error {
 		})
 	}
 
-	for _, tenant := range []string{"tenant5", "daniel", "test"} {
-		if tenantID == tenant {
+	deps := c.Locals("dependencies").(*dependencies.ContainerGrpc)
+	if deps == nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Dependencias no proporcionadas",
+		})
+	}
+
+	tenants, err := deps.Services.TenantService.TenantList()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Error al obtener tenants",
+		})
+	}
+
+	for _, tenant := range tenants {
+		if tenantID == tenant.Identifier {
 			c.Locals("tenant_identifier", tenantID)
 			return c.Next()
 		}
 	}
-	// host := c.Hostname()
 
-	// parts := strings.Split(host, ".")
-	// if len(parts) < 2 {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-	// 		"error": "Host inválido para determinar tenant",
-	// 	})
-	// }
-
-	// for _, tenantID := range []string{"tenant5", "daniel", "test"} {
-	// 	if parts[0] == tenantID {
-	// 		c.Locals("tenant_identifier", tenantID)
-	// 		return c.Next()
-	// 	}
-	// }
-
-	// tenantIdentifier := parts[0]
 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 		"error": "Tenant no autorizado",
 	})

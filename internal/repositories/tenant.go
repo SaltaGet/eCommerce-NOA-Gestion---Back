@@ -16,3 +16,24 @@ func (r *TenantRepository) TenantList() (*pb.ListTenantsResponse, error) {
 
 	return tenants, nil
 }
+
+func (r *TenantRepository) TenantGet(identifier string) (*pb.TenantResponse, error) {
+	req := &pb.TenantRequest{
+		Identifier: identifier,
+	}
+	tenant, err := r.Client.TenantGetIdentifier(context.Background(), req)
+	if err != nil {
+		return nil, schemas.HandlerErrorGrpc(err)
+	}
+
+	return tenant, nil
+}
+
+func (r *TenantRepository) TenantSaveImage(req *pb.TenantRequestImageSetting, ctx context.Context) (*pb.TenantUpdateImageResponse, error) {
+	reps, err := r.Client.TenantUpdateImageSetting(ctx, req)
+	if err != nil {
+		return nil, schemas.HandlerErrorGrpc(err)
+	}
+
+	return reps, nil
+}

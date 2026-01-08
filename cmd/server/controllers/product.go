@@ -5,6 +5,7 @@ import (
 	"mime/multipart"
 
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/schemas"
+	"github.com/SaltaGet/ecommerce-fiber-ms/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
@@ -17,6 +18,7 @@ import (
 //	@Accept			json
 //	@Produce		json
 //	@Param			tenantID	path		string	true	"ID del Tenant"
+//	@Param			code		query		string	true	"codigo del producto"
 //	@Success		200			{object}	schemas.Response{body=schemas.ProductResponse}
 //	@Router			/ecommerce/{tenantID}/api/v1/product/get_by_code [get]
 func (ctrl *ProductController) ProductGetByCode(c *fiber.Ctx) error {
@@ -48,6 +50,9 @@ func (ctrl *ProductController) ProductGetByCode(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			tenantID	path		string	true	"ID del Tenant"
+//	@Param			page		query		int		true	"pagina"
+//	@Param			limit		query		int		true	"limite"
+//	@Param			page_size	query		int		true	"tamaño de la pagina"
 //	@Success		200			{object}	schemas.Response{body=schemas.ProductResponseDTO}
 //	@Router			/ecommerce/{tenantID}/api/v1/product/get_page [get]
 func (ctrl *ProductController) ProductGetPage(c *fiber.Ctx) error {
@@ -89,21 +94,33 @@ func (ctrl *ProductController) ProductGetPage(c *fiber.Ctx) error {
 // ProductSaveImage godoc
 //
 //	@Summary		ProductSaveImage
-//	@Description	Guardar imagenes de producto
+//
+//	@Description	### Flujo de Carga de Imágenes
+//	@Description	Genera un token temporal desde la API principal para subir imágenes al microservicio.
+//	@Description
+//	@Description	**Endpoitn de la api princial para pedir token:**
+//	@Description	~~~
+//	@Description	POST /api/v1/product/generate_token_to_image
+//	@Description	~~~
+//	@Description
+//	@Description	**Pasos requeridos:**
+//	@Description	1. Incluir el token en el header `x-token-tenant`.
+//	@Description
+//	@Description	> *Nota: El token tiene una validez limitada de 30 minutos.*
+//
 //	@Tags			Product
 //	@Accept			multipart/form-data
 //	@Produce		json
 //	@Param			tenantID		path		string	true	"ID del Tenant"
-//	@Param			token			formData	string	true	"Token de validación"
-//	@Param			primaryImage	formData	file	true	"Imagen principal del producto"
-//	@Param			secondaryImage	formData	file	false	"Imágenes secundarias (puedes enviar varias)"
+//	@Param			x-token-tenant	header		string	true	"Token o ID de validación personalizada"
+//	@Param			primaryImage	formData	file	false	"Imagen principal del producto"
+//	@Param			secondaryImage	formData	[]file	false	"Imágenes secundarias (puedes enviar varias)"
 //	@Success		200				{object}	schemas.Response
-//	@Router			/ecommerce/{tenantID}/api/v1/product/save_image [post]
+//	@Router			/ecommerce/{tenantID}/api/v1/product/upload_image [post]
 func (ctrl *ProductController) ProductSaveImage(c *fiber.Ctx) error {
 	primaryImage, err := c.FormFile("primaryImage")
 	if err != nil {
-		log.Error().Err(err).Msg("La imagen principal no se pudo leer")
-		return schemas.ErrorResponse(fiber.StatusBadRequest, "La imagen principal es obligatoria", err)
+		primaryImage = nil
 	}
 
 	var imageFiles []*multipart.FileHeader
@@ -119,16 +136,50 @@ func (ctrl *ProductController) ProductSaveImage(c *fiber.Ctx) error {
 		SecondaryImages: imageFiles,
 	}
 
-	tenantID, ok := c.Locals("tenant_identifier").(string)
-	if !ok || tenantID == "" {
-		return schemas.ErrorResponse(fiber.StatusUnauthorized, "Tenant identifier no encontrado", nil)
-	}
-	productID, ok := c.Locals("product_id").(float64)
-	if !ok || productID == 0 {
-		return schemas.ErrorResponse(fiber.StatusUnauthorized, "Product id no encontrado", nil)
+	add := c.Locals("add").(float64)
+	lenImgs := len(imageFiles)
+	// if lenImgs == int(add) {
+	// 	return c.Status(fiber.StatusOK).JSON(schemas.Response{
+	// 		Status:  false,
+	// 		Message: "Las imágenes secundarias son obligatorias",
+	// 	})
+	// }
+	tenantID := c.Locals("tenant_identifier").(string)
+	productID := c.Locals("product_id").(float64)
+	keep := c.Locals("keep").(string)
+	remove := c.Locals("remove").(string)
+	primaryImg := c.Locals("primary_image").(string)
+	if primaryImg == "set" && primaryImage == nil {
+		return c.Status(400).JSON(schemas.Response{
+			Status:  false,
+			Message: "La imagen principal no debede de estar vacio, no concuerda con el token de validación",
+		})
 	}
 
-	err = ctrl.ProductService.ProductUploadImages(tenantID, schema, int64(productID), c.Context())
+	
+	if lenImgs != int(add) {
+		return c.Status(400).JSON(schemas.Response{
+			Status:  false,
+			Message: "Las imágenes secundarias para agregar no concuerdan con la cantidad de imagenes a agregar",
+		})
+	}
+
+	addInt := int32(add)
+
+	validationData := &schemas.ProductValidateImage{
+		ProductID:    int64(productID),
+		PrimaryImage: primaryImg,
+		SecondaryImage: schemas.ValidateSecondaryImage{
+			Add:         &addInt,
+			KeepUUIDs:   utils.SplitStrings(&keep),
+			RemoveUUIDs: utils.SplitStrings(&remove),
+		},
+	}
+	if err := validationData.Validate(); err != nil {
+		return schemas.HandleError(c, err)
+	}
+
+	err = ctrl.ProductService.ProductUploadImages(tenantID, schema, int64(productID), validationData, c.Context())
 	if err != nil {
 		return schemas.HandleError(c, err)
 	}

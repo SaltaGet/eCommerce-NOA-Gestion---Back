@@ -76,9 +76,9 @@ func (repo *ProductRepository) ProductGetPage(req *schemas.ProductRequest, tenan
 	return listProd, nil
 }
 
-func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, ctx context.Context) error {
+func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, validationData *schemas.ProductValidateImage, ctx context.Context) error {
 	type imageResult struct {
-		primary     string
+		primary     *string
 		secondaries []string
 		filesNames  []string
 		uuidBases   []string
@@ -90,11 +90,11 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 		wg     sync.WaitGroup
 		mu     sync.Mutex
 	)
-
-	wg.Add(1)
-	go func(file *multipart.FileHeader) {
+	if schema.PrimaryImage != nil {
+		wg.Add(1)
+		go func(file *multipart.FileHeader) {
 		defer wg.Done()
-		fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file)
+		fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file, 200, 500)
 
 		mu.Lock()
 		defer mu.Unlock()
@@ -102,16 +102,17 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 			result.err = err
 			return
 		}
-		result.primary = uuidGen
+		result.primary = &uuidGen
 		result.filesNames = append(result.filesNames, fileNames...)
 		result.uuidBases = append(result.uuidBases, uuidGen)
-	}(schema.PrimaryImage)
+		}(schema.PrimaryImage)
+	}
 
 	for _, fileImg := range schema.SecondaryImages {
 		wg.Add(1)
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
-			fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file)
+			fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file, 200, 500)
 
 			mu.Lock()
 			defer mu.Unlock()
@@ -129,7 +130,7 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 
 	if result.err != nil {
 		for _, uuidBase := range result.uuidBases {
-			err := utils.DeleteTenantImages(tenantID, uuidBase)
+			err := utils.DeleteTenantImages(tenantID, uuidBase, 200, 500)
 			if err != nil {
 				log.Error().Err(err).Msg("Error al eliminar imágenes tras fallo en guardado")
 			}
@@ -148,11 +149,20 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 		ProdId:          productID,
 		PrimaryImage:    result.primary,
 		SecondaryImages: result.secondaries,
+		KeepSecondaries: validationData.SecondaryImage.KeepUUIDs,
+		RemoveSecondaries: validationData.SecondaryImage.RemoveUUIDs,
 	}
 
 	_, err := repo.Client.SaveUrlImage(outCtx, req)
 	if err != nil {
 		return schemas.HandlerErrorGrpc(err)
+	}
+
+	for _, uuidBase := range validationData.SecondaryImage.KeepUUIDs {
+		err := utils.DeleteTenantImages(tenantID, uuidBase, 200, 500)
+		if err != nil {
+			log.Error().Err(err).Msg("Error al eliminar imágenes tras guardado")
+		}
 	}
 
 	return nil

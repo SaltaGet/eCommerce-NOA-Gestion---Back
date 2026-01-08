@@ -23,7 +23,8 @@ func (svc *ProductService) ProductGetByCode(code string, tenantID string, ctx co
 		},
 		Price:    product.Price,
 		Stock:    float64(product.Stock),
-		UrlImage: product.UrlImage,
+		PrimaryImage: product.PrimaryImage,
+		SecondaryImage: product.SecondaryImages,
 	}
 
 	return prodResponse, nil
@@ -47,7 +48,7 @@ func (svc *ProductService) ProductGetPage(req *schemas.ProductRequest, tenantID 
 			},
 			Price:    product.Price,
 			Stock:    float64(product.Stock),
-			UrlImage: &product.UrlImage,
+			PrimaryImage: product.PrimaryImage,
 		}
 		products = append(products, prodResponse)
 	}
@@ -55,8 +56,8 @@ func (svc *ProductService) ProductGetPage(req *schemas.ProductRequest, tenantID 
 	return products, int64(productsResp.Total), nil
 }
 
-func (svc *ProductService) ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, ctx context.Context) error {
-	err := svc.Repo.ProductUploadImages(tenantID, schema, int64(productID), ctx)
+func (svc *ProductService) ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, validationData *schemas.ProductValidateImage, ctx context.Context) error {
+	err := svc.Repo.ProductUploadImages(tenantID, schema, int64(productID), validationData, ctx)
 	if err != nil {
 		return err
 	}
