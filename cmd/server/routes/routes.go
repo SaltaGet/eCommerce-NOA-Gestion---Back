@@ -10,4 +10,5 @@ func SetupRoutes(app *fiber.App, deps *dependencies.ContainerGrpc) {
 	TenantRoutes(app, deps.Controllers.TenantController)
 	CategoryRoutes(app, deps.Controllers.CategoryController)
 	ImageRouter(app)
+	MPRoutes(app, deps.Controllers.MPController)
 }

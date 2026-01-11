@@ -103,6 +103,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/ecommerce/{tenantID}/api/v1/mp/generate_link": {
+            "post": {
+                "description": "Obtener link de pago",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mercado Pago"
+                ],
+                "summary": "MPGenerateLink",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecommerce/{tenantID}/api/v1/mp/state_pay": {
+            "post": {
+                "description": "Obtener link de pago",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mercado Pago"
+                ],
+                "summary": "MPStatePay",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/ecommerce/{tenantID}/api/v1/product/get_by_code": {
             "get": {
                 "description": "Obtener un producto por su código",

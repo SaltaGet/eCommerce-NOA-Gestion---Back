@@ -13,16 +13,19 @@ type ContainerGrpc struct {
 		TenantController *controllers.TenantController
 		ProductController *controllers.ProductController
 		CategoryController *controllers.CategoryController
+		MPController *controllers.MPController
 	}
 	Services struct {
 		TenantService *services.TenantService
 		ProductService *services.ProductService
 		CategoryService *services.CategoryService
+		MPService *services.MPService
 	}
 	Repositories struct {
 		TenantClient *repositories.TenantRepository
 		ProductClient *repositories.ProductRepository
 		CategoryClient *repositories.CategoryRepository
+		MPClient *repositories.MercadoPagoRepository
 	}
 }
 
@@ -33,6 +36,7 @@ func NewContainerGrpc(conn *grpc.ClientConn) *ContainerGrpc {
 	repoTenant := pb.NewTenantServiceClient(conn)
 	repoProduct := pb.NewProductServiceClient(conn)
 	repoCategory := pb.NewCategoryServiceClient(conn)
+	repoMP := pb.NewMPServiceClient(conn)
 
 	c.Repositories.TenantClient = &repositories.TenantRepository{
 		Client: repoTenant,
@@ -42,6 +46,9 @@ func NewContainerGrpc(conn *grpc.ClientConn) *ContainerGrpc {
 	}
 	c.Repositories.CategoryClient = &repositories.CategoryRepository{
 		Client: repoCategory,
+	}
+	c.Repositories.MPClient = &repositories.MercadoPagoRepository{
+		Client: repoMP,
 	}
 
 	c.Services.TenantService = &services.TenantService{
@@ -53,6 +60,9 @@ func NewContainerGrpc(conn *grpc.ClientConn) *ContainerGrpc {
 	c.Services.CategoryService = &services.CategoryService{
 		Repo: c.Repositories.CategoryClient,
 	}
+	c.Services.MPService = &services.MPService{
+		Repo: c.Repositories.MPClient,
+	}
 
 	c.Controllers.TenantController = &controllers.TenantController{
 		TenantService: c.Services.TenantService,
@@ -62,6 +72,9 @@ func NewContainerGrpc(conn *grpc.ClientConn) *ContainerGrpc {
 	}
 	c.Controllers.CategoryController = &controllers.CategoryController{
 		CategoryService: c.Services.CategoryService,
+	}
+	c.Controllers.MPController = &controllers.MPController{
+		MPService: c.Services.MPService,
 	}
 
 	return c

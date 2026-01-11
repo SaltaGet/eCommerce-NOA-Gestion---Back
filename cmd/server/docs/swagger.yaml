@@ -132,6 +132,48 @@ paths:
       summary: ImageGet
       tags:
       - Image
+  /ecommerce/{tenantID}/api/v1/mp/generate_link:
+    post:
+      consumes:
+      - application/json
+      description: Obtener link de pago
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.Response'
+      summary: MPGenerateLink
+      tags:
+      - Mercado Pago
+  /ecommerce/{tenantID}/api/v1/mp/state_pay:
+    post:
+      consumes:
+      - application/json
+      description: Obtener link de pago
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.Response'
+      summary: MPStatePay
+      tags:
+      - Mercado Pago
   /ecommerce/{tenantID}/api/v1/product/get_by_code:
     get:
       consumes:

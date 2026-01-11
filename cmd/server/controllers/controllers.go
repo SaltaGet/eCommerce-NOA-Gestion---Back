@@ -13,3 +13,7 @@ type ProductController struct {
 type CategoryController struct {
 	CategoryService ports.CategoryService
 }
+
+type MPController struct {
+	MPService ports.MPService
+}

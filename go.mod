@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/gofiber/fiber/v2 v2.52.10
 	github.com/swaggo/swag v1.16.4
-	google.golang.org/grpc v1.77.0
+	google.golang.org/grpc v1.78.0
 )
 
 require (
@@ -31,7 +31,7 @@ require (
 )
 
 require (
-	github.com/DanielChachagua/ecommerce-noagestion-protos v0.0.0-20260108061903-9c0a465ab0d5
+	github.com/DanielChachagua/ecommerce-noagestion-protos v0.0.0-20260110073901-d3438561c35d
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/chai2010/webp v1.4.0
 	github.com/go-playground/validator/v10 v10.30.1
@@ -43,6 +43,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/mercadopago/sdk-go v1.8.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rs/zerolog v1.34.0
@@ -53,5 +54,5 @@ require (
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )

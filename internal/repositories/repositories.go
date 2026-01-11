@@ -13,3 +13,7 @@ type TenantRepository struct {
 type CategoryRepository struct {
 	Client pb.CategoryServiceClient
 }
+
+type MercadoPagoRepository struct {
+	Client pb.MPServiceClient
+}

@@ -13,3 +13,7 @@ type ProductService struct {
 type CategoryService struct {
 	Repo ports.CategoryRepository
 }
+
+type MPService struct {
+	Repo ports.MPRepository
+}
