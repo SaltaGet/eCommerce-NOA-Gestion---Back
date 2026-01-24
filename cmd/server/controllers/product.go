@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"mime/multipart"
+	"strconv"
 
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/schemas"
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/utils"
@@ -28,9 +29,9 @@ func (ctrl *ProductController) ProductGetByCode(c *fiber.Ctx) error {
 		return schemas.ErrorResponse(fiber.StatusBadRequest, "El código es obligatorio", errors.New("código de consulta vacío"))
 	}
 
-	tenantID := c.Locals("tenant_identifier").(string)
+	tenantID := c.Locals("tenant_data").(schemas.TenantResponseSetting)
 
-	product, err := ctrl.ProductService.ProductGetByCode(code, tenantID, c.Context())
+	product, err := ctrl.ProductService.ProductGetByCode(code, tenantID.Identifier, c.Context())
 	if err != nil {
 		return schemas.HandleError(c, err)
 	}
@@ -50,9 +51,11 @@ func (ctrl *ProductController) ProductGetByCode(c *fiber.Ctx) error {
 //	@Accept			json
 //	@Produce		json
 //	@Param			tenantID	path		string	true	"ID del Tenant"
-//	@Param			page		query		int		true	"pagina"
-//	@Param			limit		query		int		true	"limite"
-//	@Param			page_size	query		int		true	"tamaño de la pagina"
+//	@Param			page		query		int		false	"pagina"
+//	@Param			limit		query		int		false	"limite"
+//	@Param			name	query		string		false	"nombre del producto"
+//	@Param			category_id	query		int		false	"categoria id del producto"
+//	@Param			order	query		string		false	"ordenar por" Enums(PRICE_LOW_TO_HIGH, PRICE_HIGH_TO_LOW, NAME_A_Z, NAME_Z_A)
 //	@Success		200			{object}	schemas.Response{body=schemas.ProductResponseDTO}
 //	@Router			/ecommerce/{tenantID}/api/v1/product/get_page [get]
 func (ctrl *ProductController) ProductGetPage(c *fiber.Ctx) error {
@@ -64,30 +67,48 @@ func (ctrl *ProductController) ProductGetPage(c *fiber.Ctx) error {
 	if limit == 0 {
 		limit = 10
 	}
-	pageSize := c.QueryInt("page_size")
-	if pageSize == 0 {
-		pageSize = 10
+	category, err := strconv.ParseInt(c.Query("category_id", "0"), 10, 32)
+	name := c.Query("name")
+
+	var search *string
+	if name != "" {
+		search = &name
+	}
+	var categoryID *int32
+	if category != 0 {
+		val := int32(category)
+    categoryID = &val
+	}
+
+	order := c.Query("order", "")
+	var orderBy *schemas.SortBy 
+	if order != "" {
+		if val, ok := schemas.SortBy_value[order]; ok {
+        sortVal := schemas.SortBy(val)
+        orderBy = &sortVal
+    }
 	}
 
 	req := &schemas.ProductRequest{
 		Page:     int32(page),
-		PageSize: int32(limit),
 		Limit:    int32(limit),
+		CategoryID: categoryID,
+		Search:     search,
+		Sort: orderBy,
 	}
 
-	tenantID := c.Locals("tenant_identifier").(string)
-	products, total, err := ctrl.ProductService.ProductGetPage(req, tenantID, c.Context())
+	tenantID := c.Locals("tenant_data").(schemas.TenantResponseSetting)
+	products, total, err := ctrl.ProductService.ProductGetPage(req, tenantID.Identifier, c.Context())
 	if err != nil {
 		return schemas.HandleError(c, err)
 	}
 
-	return c.JSON(schemas.Response{
-		Status: true,
-		Body: fiber.Map{
-			"products": products,
-			"total":    total,
-		},
-		Message: "Productos obtenidos con éxito",
+	totalPages := int((total + int64(limit) - 1) / int64(limit))
+
+	return c.Status(fiber.StatusOK).JSON(schemas.Response{
+		Status:  true,
+		Body:    map[string]any{"data": products, "total": total, "page": page, "limit": limit, "total_pages": totalPages},
+		Message: "Productos obtenidos correctamente",
 	})
 }
 
@@ -144,7 +165,7 @@ func (ctrl *ProductController) ProductSaveImage(c *fiber.Ctx) error {
 	// 		Message: "Las imágenes secundarias son obligatorias",
 	// 	})
 	// }
-	tenantID := c.Locals("tenant_identifier").(string)
+	tenantID := c.Locals("tenant_data").(schemas.TenantResponseSetting)
 	productID := c.Locals("product_id").(float64)
 	keep := c.Locals("keep").(string)
 	remove := c.Locals("remove").(string)
@@ -179,7 +200,7 @@ func (ctrl *ProductController) ProductSaveImage(c *fiber.Ctx) error {
 		return schemas.HandleError(c, err)
 	}
 
-	err = ctrl.ProductService.ProductUploadImages(tenantID, schema, int64(productID), validationData, c.Context())
+	err = ctrl.ProductService.ProductUploadImages(tenantID.Identifier, schema, int64(productID), validationData, c.Context())
 	if err != nil {
 		return schemas.HandleError(c, err)
 	}

@@ -11,6 +11,7 @@ type ProductRepository interface {
 	ProductGetByCode(code string, tenantID string, ctx context.Context) (*pb.Product, error)
 	ProductGetPage(req *schemas.ProductRequest, tenantID string, ctx context.Context) (*pb.ListProductsResponse, error)
 	ProductUploadImages(tenantID string, schema *schemas.ProductUploadSchema, productID int64, validationDate *schemas.ProductValidateImage, ctx context.Context) error
+	ProductsValidate(listIDs []int64, tenantID string, ctx context.Context) (*pb.ProductValidateResponse, error)
 }
 
 type ProductService interface {

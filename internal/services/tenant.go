@@ -6,30 +6,40 @@ import (
 	"fmt"
 	"mime/multipart"
 	"sync"
-	"time"
-
 	"github.com/DanielChachagua/ecommerce-noagestion-protos/pb"
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/schemas"
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/utils"
 )
 
-func (s *TenantService) TenantList() ([]schemas.TenantResponse, error) {
+func (s *TenantService) TenantList() ([]schemas.TenantResponseSetting, error) {
 	resp, err := s.Repo.TenantList()
 	if err != nil {
 		return nil, err
 	}
 
-	var tenants []schemas.TenantResponse
+	var tenants []schemas.TenantResponseSetting
 	for _, t := range resp.Tenants {
-		var expiration *time.Time
-		if t.Expiration != nil {
-			exp := t.Expiration.AsTime()
-			expiration = &exp
-		}
-		tenant := schemas.TenantResponse{
+		tenant := schemas.TenantResponseSetting{
+			ID: t.Id,
+			Name: t.Name,
 			Identifier: t.Identifier,
-			IsActive:   t.IsActive,
-			Expiration: expiration,
+			Address: t.Address,
+			Phone: t.Phone,
+			Email: t.Email,
+			SettingTenant: schemas.SettingTenant{
+				ID:             t.SettingTenant.Id,
+				LogoSmall:      t.SettingTenant.Logo,
+				LogoBig:        t.SettingTenant.Logo,
+				FrontPageSmall: t.SettingTenant.FrontPage,
+				FrontPageBig:   t.SettingTenant.FrontPage,
+				Title:          t.SettingTenant.Title,
+				Slogan:         t.SettingTenant.Slogan,
+				PrimaryColor:   t.SettingTenant.PrimaryColor,
+				SecondaryColor: t.SettingTenant.SecondaryColor,
+				Phone: t.SettingTenant.Phone,
+			},
+			TokenMP: t.TokenMp,
+			TokenEmail: t.TokenEmail,
 		}
 		tenants = append(tenants, tenant)
 	}
@@ -52,14 +62,14 @@ func (s *TenantService) TenantGet(tenantIdentifier string) (*schemas.TenantRespo
 		Email:      resp.Email,
 		SettingTenant: schemas.SettingTenant{
 			ID:             resp.SettingTenant.Id,
-			LogoSmall:      &resp.SettingTenant.Logo,
-			LogoBig:        &resp.SettingTenant.Logo,
-			FrontPageSmall: &resp.SettingTenant.FrontPage,
-			FrontPageBig:   &resp.SettingTenant.FrontPage,
-			Title:          &resp.SettingTenant.Title,
-			Slogan:         &resp.SettingTenant.Slogan,
-			PrimaryColor:   &resp.SettingTenant.PrimaryColor,
-			SecondaryColor: &resp.SettingTenant.SecondaryColor,
+			LogoSmall:      resp.SettingTenant.Logo,
+			LogoBig:        resp.SettingTenant.Logo,
+			FrontPageSmall: resp.SettingTenant.FrontPage,
+			FrontPageBig:   resp.SettingTenant.FrontPage,
+			Title:          resp.SettingTenant.Title,
+			Slogan:         resp.SettingTenant.Slogan,
+			PrimaryColor:   resp.SettingTenant.PrimaryColor,
+			SecondaryColor: resp.SettingTenant.SecondaryColor,
 		},
 	}
 

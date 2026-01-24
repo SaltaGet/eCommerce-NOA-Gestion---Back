@@ -16,4 +16,5 @@ type CategoryService struct {
 
 type MPService struct {
 	Repo ports.MPRepository
+	RepoProd ports.ProductRepository
 }

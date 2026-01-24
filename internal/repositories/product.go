@@ -38,28 +38,9 @@ func (repo *ProductRepository) ProductGetPage(req *schemas.ProductRequest, tenan
 	prodReq := &pb.ListProductsRequest{
 		Page:     req.Page,
 		Limit:    req.Limit,
-		PageSize: req.Limit,
-	}
-
-	if req.Search != nil {
-		prodReq.Search = req.Search
-	}
-
-	if req.CategoryID != nil {
-		var cat int32 = 0
-		if req.CategoryID == &cat {
-			prodReq.CategoryId = nil
-		} else {
-			prodReq.CategoryId = req.CategoryID
-		}
-	}
-
-	if req.Search != nil {
-		prodReq.Search = req.Search
-	}
-
-	if req.Sort != nil {
-		prodReq.Sort = (*pb.ListProductsRequest_SortBy)(req.Sort)
+		Search: req.Search,
+		CategoryId: req.CategoryID,
+		Sort:       (*pb.ListProductsRequest_SortBy)(req.Sort),
 	}
 
 	ctxt, cancel := context.WithTimeout(ctx, requestTimeout)
@@ -93,18 +74,18 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 	if schema.PrimaryImage != nil {
 		wg.Add(1)
 		go func(file *multipart.FileHeader) {
-		defer wg.Done()
-		fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file, 200, 500)
+			defer wg.Done()
+			fileNames, uuidGen, err := utils.SaveTenantImages(tenantID, file, 200, 500)
 
-		mu.Lock()
-		defer mu.Unlock()
-		if err != nil {
-			result.err = err
-			return
-		}
-		result.primary = &uuidGen
-		result.filesNames = append(result.filesNames, fileNames...)
-		result.uuidBases = append(result.uuidBases, uuidGen)
+			mu.Lock()
+			defer mu.Unlock()
+			if err != nil {
+				result.err = err
+				return
+			}
+			result.primary = &uuidGen
+			result.filesNames = append(result.filesNames, fileNames...)
+			result.uuidBases = append(result.uuidBases, uuidGen)
 		}(schema.PrimaryImage)
 	}
 
@@ -146,10 +127,10 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 	outCtx := metadata.NewOutgoingContext(ctxt, md)
 
 	req := &pb.SaveImageRequest{
-		ProdId:          productID,
-		PrimaryImage:    result.primary,
-		SecondaryImages: result.secondaries,
-		KeepSecondaries: validationData.SecondaryImage.KeepUUIDs,
+		ProdId:            productID,
+		PrimaryImage:      result.primary,
+		SecondaryImages:   result.secondaries,
+		KeepSecondaries:   validationData.SecondaryImage.KeepUUIDs,
 		RemoveSecondaries: validationData.SecondaryImage.RemoveUUIDs,
 	}
 
@@ -166,4 +147,23 @@ func (repo *ProductRepository) ProductUploadImages(tenantID string, schema *sche
 	}
 
 	return nil
+}
+
+func (repo *ProductRepository) ProductsValidate(listIDs []int64, tenantID string, ctx context.Context) (*pb.ProductValidateResponse, error) {
+	prodReq := &pb.ProductValidateRequest{
+		ProductIds: listIDs,
+	}
+
+	ctxt, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+
+	md := metadata.Pairs("x-tenant-identifier", tenantID)
+
+	outCtx := metadata.NewOutgoingContext(ctxt, md)
+	validateResp, err := repo.Client.ValidateProducts(outCtx, prodReq)
+	if err != nil {
+		return nil, schemas.HandlerErrorGrpc(err)
+	}
+
+	return validateResp, nil
 }

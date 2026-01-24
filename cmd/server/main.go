@@ -15,6 +15,7 @@ import (
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/logging"
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/middleware"
 	"github.com/SaltaGet/ecommerce-fiber-ms/cmd/server/routes"
+	"github.com/SaltaGet/ecommerce-fiber-ms/internal/cache"
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/config"
 	"github.com/SaltaGet/ecommerce-fiber-ms/internal/dependencies"
 	"github.com/gofiber/fiber/v2"
@@ -69,6 +70,9 @@ func main() {
 
 	deps := dependencies.NewContainerGrpc(conn)
 
+	tenants := cache.NewTenantStore()
+	go jobs.ReloadTenants(tenants, deps)
+
 	app := fiber.New(fiber.Config{
 		AppName:               "eCommerce API",
 		IdleTimeout:           30 * time.Second,
@@ -112,9 +116,10 @@ func main() {
 	app.Use(middleware.InjectDependencies(deps))
 
 	// 3. RUTAS
-	app.Get("/health", healthHandler)
-	app.Get("/ecommerce/:tenantID/api/swagger/*", swagger.HandlerDefault)
-	routes.SetupRoutes(app, deps)
+	ecommerce := app.Group("/ecommerce")
+	ecommerce.Get("/health", healthHandler)
+	ecommerce.Get("/documentation/api/swagger/*", swagger.HandlerDefault)
+	routes.SetupRoutes(ecommerce, deps, tenants)
 
 	// 4. START SERVER (Goroutine)
 	serverAddr := fmt.Sprintf(":%d", cfg.Port)

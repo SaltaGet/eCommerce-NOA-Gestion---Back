@@ -21,6 +21,7 @@ type SettingTenant struct {
 	Slogan         *string `json:"slogan"`
 	PrimaryColor   *string `json:"primary_color"`
 	SecondaryColor *string `json:"secondary_color"`
+	Phone          *string `json:"phone"`
 }
 
 type TenantResponseSetting struct {
@@ -31,6 +32,9 @@ type TenantResponseSetting struct {
 	Phone         string        `json:"phone"`
 	Email         string        `json:"email"`
 	SettingTenant SettingTenant `json:"setting_tenant"`
+	TokenMP       *string       `json:"token_mp,omitempty"`
+	TokenEmail    *string       `json:"token_email,omitempty"`
+	ConfigToken   *bool          `json:"config_token"`
 }
 
 type TenantUploadSchema struct {

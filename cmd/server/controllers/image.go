@@ -22,7 +22,7 @@ import (
 //	@Success		200			{object}	any
 //	@Router			/ecommerce/{tenantID}/api/v1/image/get/{filename} [get]
 func ImageGet(c *fiber.Ctx) error {
-	tenantID := c.Locals("tenant_identifier").(string)
+	tenantID := c.Locals("tenant_data").(schemas.TenantResponseSetting)
 	filename := c.Params("filename")
 
 	if filename == "" {
@@ -46,10 +46,12 @@ func ImageGet(c *fiber.Ctx) error {
 		uuidPart = strings.TrimSuffix(nameWithoutExt, "p200")
 	} else if strings.HasSuffix(nameWithoutExt, "p500") {
 		uuidPart = strings.TrimSuffix(nameWithoutExt, "p500")
+	} else if strings.HasSuffix(nameWithoutExt, "p1000") {
+		uuidPart = strings.TrimSuffix(nameWithoutExt, "p1000")
 	} else {
 		return c.Status(fiber.StatusBadRequest).JSON(schemas.Response{
 			Status:  false,
-			Message: "el archivo no tiene un sufijo de tamaño válido (p200/p500)",
+			Message: "el archivo no tiene un sufijo de tamaño válido (p200/p500/p1000)",
 		})
 	}
 
@@ -61,9 +63,9 @@ func ImageGet(c *fiber.Ctx) error {
 		})
 	}
 
-	imagePath, exist := utils.GetPath(tenantID, filename)
+	imagePath, exist := utils.GetPath(tenantID.Identifier, filename)
 	if !exist {
-		log.Error().Str("tenant", tenantID).Str("file", filename).Msg("Imagen no encontrada")
+		log.Error().Str("tenant", tenantID.Identifier).Str("file", filename).Msg("Imagen no encontrada")
 		return c.Status(fiber.StatusNotFound).JSON(schemas.Response{
 			Status:  false,
 			Message: "la imagen no existe",

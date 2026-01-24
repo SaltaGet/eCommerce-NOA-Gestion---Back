@@ -13,6 +13,42 @@ definitions:
       name:
         type: string
     type: object
+  schemas.ItemsCart:
+    properties:
+      name:
+        example: Product 1
+        type: string
+      product_id:
+        example: 1
+        type: integer
+      quantity:
+        example: 1
+        type: integer
+      unit_price:
+        example: 100
+        type: number
+    required:
+    - name
+    - product_id
+    - quantity
+    - unit_price
+    type: object
+  schemas.Payer:
+    properties:
+      email:
+        example: johndoe@example.com
+        type: string
+      name:
+        example: John
+        type: string
+      surname:
+        example: Doe
+        type: string
+    required:
+    - email
+    - name
+    - surname
+    type: object
   schemas.ProductResponse:
     properties:
       category:
@@ -60,6 +96,19 @@ definitions:
         type: string
       status:
         type: boolean
+    type: object
+  schemas.ShoppingCart:
+    properties:
+      client:
+        $ref: '#/definitions/schemas.Payer'
+      items:
+        items:
+          $ref: '#/definitions/schemas.ItemsCart'
+        minItems: 1
+        type: array
+    required:
+    - client
+    - items
     type: object
   schemas.TenantResponse:
     properties:
@@ -143,6 +192,12 @@ paths:
         name: tenantID
         required: true
         type: string
+      - description: Body
+        in: body
+        name: shopping_cart
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.ShoppingCart'
       produces:
       - application/json
       responses:
@@ -151,6 +206,32 @@ paths:
           schema:
             $ref: '#/definitions/schemas.Response'
       summary: MPGenerateLink
+      tags:
+      - Mercado Pago
+  /ecommerce/{tenantID}/api/v1/mp/info_pay/{reference}:
+    get:
+      consumes:
+      - application/json
+      description: Obtener información de pago
+      parameters:
+      - description: ID del Tenant
+        in: path
+        name: tenantID
+        required: true
+        type: string
+      - description: Referencia de pago
+        in: path
+        name: reference
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.Response'
+      summary: MPInfoPay
       tags:
       - Mercado Pago
   /ecommerce/{tenantID}/api/v1/mp/state_pay:
@@ -219,18 +300,28 @@ paths:
       - description: pagina
         in: query
         name: page
-        required: true
         type: integer
       - description: limite
         in: query
         name: limit
-        required: true
         type: integer
-      - description: tamaño de la pagina
+      - description: nombre del producto
         in: query
-        name: page_size
-        required: true
+        name: name
+        type: string
+      - description: categoria id del producto
+        in: query
+        name: category_id
         type: integer
+      - description: ordenar por
+        enum:
+        - PRICE_LOW_TO_HIGH
+        - PRICE_HIGH_TO_LOW
+        - NAME_A_Z
+        - NAME_Z_A
+        in: query
+        name: order
+        type: string
       produces:
       - application/json
       responses:

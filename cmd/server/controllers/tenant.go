@@ -19,16 +19,22 @@ import (
 //	@Success		200			{object}	schemas.Response{body=[]schemas.TenantResponse}
 //	@Router			/ecommerce/{tenantID}/api/v1/tenant/get [get]
 func (c *TenantController) TenantGet(ctx *fiber.Ctx) error {
-	tenantIdentifier := ctx.Locals("tenant_identifier").(string)
-	tenant, err := c.TenantService.TenantGet(tenantIdentifier)
-	if err != nil {
-		return schemas.HandleError(ctx, err)
+	tenant := ctx.Locals("tenant_data").(schemas.TenantResponseSetting)
+
+	tenant.SettingTenant.LogoSmall = utils.GenerateUrl(ctx, tenant.Identifier, tenant.SettingTenant.LogoSmall, "p200")
+	tenant.SettingTenant.LogoBig = utils.GenerateUrl(ctx, tenant.Identifier, tenant.SettingTenant.LogoBig, "p500")
+	tenant.SettingTenant.FrontPageSmall = utils.GenerateUrl(ctx, tenant.Identifier, tenant.SettingTenant.FrontPageSmall, "p500")
+	tenant.SettingTenant.FrontPageBig = utils.GenerateUrl(ctx, tenant.Identifier, tenant.SettingTenant.FrontPageBig, "p1000")
+
+	if tenant.TokenMP != nil {
+		tenant.TokenMP = nil
+		set := true
+		tenant.ConfigToken = &set
 	}
 
-	tenant.SettingTenant.LogoSmall = utils.GenerateUrl(ctx, tenantIdentifier, tenant.SettingTenant.LogoSmall, "p200")
-	tenant.SettingTenant.LogoBig = utils.GenerateUrl(ctx, tenantIdentifier, tenant.SettingTenant.LogoBig, "p500")
-	tenant.SettingTenant.FrontPageSmall = utils.GenerateUrl(ctx, tenantIdentifier, tenant.SettingTenant.LogoBig, "p500")
-	tenant.SettingTenant.FrontPageSmall = utils.GenerateUrl(ctx, tenantIdentifier, tenant.SettingTenant.LogoBig, "p1000")
+	if tenant.TokenEmail != nil {
+		tenant.TokenEmail = nil
+	}
 
 	return ctx.Status(200).JSON(schemas.Response{
 		Body:    tenant,
@@ -85,9 +91,9 @@ func (ctrl *TenantController) TenantSaveImage(c *fiber.Ctx) error {
 		FrontPageImages: frontPageImage,
 	}
 
-	tenantIdentifier := c.Locals("tenant_identifier").(string)
+	tenantID := c.Locals("tenant_data").(schemas.TenantResponseSetting)
 
-	err = ctrl.TenantService.TenantSaveImage(tenantIdentifier, schema, c.Context())
+	err = ctrl.TenantService.TenantSaveImage(tenantID.Identifier, schema, c.Context())
 	if err != nil {
 		if strings.Contains(err.Error(), "se produjo un error") {
 			return c.Status(207).JSON(schemas.Response{

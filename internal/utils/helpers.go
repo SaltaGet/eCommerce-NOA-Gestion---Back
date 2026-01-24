@@ -32,3 +32,12 @@ func SplitStrings(ptr *string) []string {
 
     return strings.Split(*ptr, ",")
 }
+
+func IsValidUUIDv4(id string) bool {
+    parsed, err := uuid.Parse(id)
+    if err != nil {
+        return false
+    }
+
+    return parsed.Version() == 4
+}

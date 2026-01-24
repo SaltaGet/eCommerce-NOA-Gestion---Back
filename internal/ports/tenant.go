@@ -14,7 +14,7 @@ type TenantRepository interface {
 }
 
 type TenantService interface {
-	TenantList() ([]schemas.TenantResponse, error)
+	TenantList() ([]schemas.TenantResponseSetting, error)
 	TenantGet(tenantIdentifier string) (*schemas.TenantResponseSetting, error)
 	TenantSaveImage(tenantID string, schema *schemas.TenantUploadSchema, ctx context.Context) error
 }

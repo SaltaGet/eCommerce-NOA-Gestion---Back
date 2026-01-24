@@ -62,6 +62,7 @@ func NewContainerGrpc(conn *grpc.ClientConn) *ContainerGrpc {
 	}
 	c.Services.MPService = &services.MPService{
 		Repo: c.Repositories.MPClient,
+		RepoProd: c.Repositories.ProductClient,
 	}
 
 	c.Controllers.TenantController = &controllers.TenantController{

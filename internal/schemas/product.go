@@ -37,10 +37,10 @@ type ProductResponseDTO struct {
 type SortBy int32
 
 const (
-	ListProductsRequest_PRICE_LOW_TO_HIGH SortBy = 0
-	ListProductsRequest_PRICE_HIGH_TO_LOW SortBy = 1
-	ListProductsRequest_NAME_A_Z          SortBy = 2
-	ListProductsRequest_NAME_Z_A          SortBy = 3
+	PRICE_LOW_TO_HIGH SortBy = 0
+	PRICE_HIGH_TO_LOW SortBy = 1
+	NAME_A_Z          SortBy = 2
+	NAME_Z_A          SortBy = 3
 )
 
 // Mapa para obtener el nombre en string (generado automáticamente)

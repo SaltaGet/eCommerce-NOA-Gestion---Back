@@ -16,9 +16,9 @@ import (
 //	@Success		200			{object}	schemas.Response{body=[]schemas.Category}
 //	@Router			/ecommerce/{tenantID}/api/v1/category/get_all [get]
 func (c *CategoryController) CategoryGetAll(ctx *fiber.Ctx) error {
-	tenantID := ctx.Locals("tenant_identifier").(string)
+	tenantID := ctx.Locals("tenant_data").(schemas.TenantResponseSetting)
 
-	categories, err := c.CategoryService.CategoryGetAll(tenantID)
+	categories, err := c.CategoryService.CategoryGetAll(tenantID.Identifier)
 	if err != nil {
 		return schemas.HandleError(ctx, err)
 	}

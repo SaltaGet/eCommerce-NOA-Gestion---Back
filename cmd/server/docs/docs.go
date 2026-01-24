@@ -123,6 +123,54 @@ const docTemplate = `{
                         "name": "tenantID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Body",
+                        "name": "shopping_cart",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.ShoppingCart"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/ecommerce/{tenantID}/api/v1/mp/info_pay/{reference}": {
+            "get": {
+                "description": "Obtener información de pago",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mercado Pago"
+                ],
+                "summary": "MPInfoPay",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del Tenant",
+                        "name": "tenantID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Referencia de pago",
+                        "name": "reference",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -243,22 +291,37 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "pagina",
                         "name": "page",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
                         "description": "limite",
                         "name": "limit",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "nombre del producto",
+                        "name": "name",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "tamaño de la pagina",
-                        "name": "page_size",
-                        "in": "query",
-                        "required": true
+                        "description": "categoria id del producto",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "PRICE_LOW_TO_HIGH",
+                            "PRICE_HIGH_TO_LOW",
+                            "NAME_A_Z",
+                            "NAME_Z_A"
+                        ],
+                        "type": "string",
+                        "description": "ordenar por",
+                        "name": "order",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -460,6 +523,55 @@ const docTemplate = `{
                 }
             }
         },
+        "schemas.ItemsCart": {
+            "type": "object",
+            "required": [
+                "name",
+                "product_id",
+                "quantity",
+                "unit_price"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Product 1"
+                },
+                "product_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "unit_price": {
+                    "type": "number",
+                    "example": 100
+                }
+            }
+        },
+        "schemas.Payer": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "surname"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "johndoe@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "surname": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
         "schemas.ProductResponse": {
             "type": "object",
             "properties": {
@@ -530,6 +642,25 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "schemas.ShoppingCart": {
+            "type": "object",
+            "required": [
+                "client",
+                "items"
+            ],
+            "properties": {
+                "client": {
+                    "$ref": "#/definitions/schemas.Payer"
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/schemas.ItemsCart"
+                    }
                 }
             }
         },
