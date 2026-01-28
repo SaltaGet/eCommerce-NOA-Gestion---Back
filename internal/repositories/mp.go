@@ -40,6 +40,7 @@ func (r *MercadoPagoRepository) MPGenerateLink(data *schemas.ShoppingCart, tenan
 			Pending: fmt.Sprintf("%s/store/%s/external_reference/pending?uuid=%s", baseUrlDom, tenantIdentifier, UUID),
 			Failure: fmt.Sprintf("%s/store/%s/external_reference/failure?uuid=%s", baseUrlDom, tenantIdentifier, UUID),
 		},
+		AutoReturn: fmt.Sprintf("%s/store/%s", baseUrlDom, tenantIdentifier),
 		ExternalReference: UUID,
 		DateOfExpiration:  &expiration,
 	}
@@ -69,6 +70,8 @@ func (r *MercadoPagoRepository) MPStatePay(data *schemas.DataInfoPay, tenant *sc
 	md := metadata.Pairs("x-tenant-identifier", tenant.Identifier)
 	outCtx := metadata.NewOutgoingContext(ctxt, md)
 
+	email := data.Metadata.Email
+
 	dataInfoPay := &pb.DataInfoPay{
 		DateApproved:      data.DateApproved,
 		DateCreated:       data.DateCreated,
@@ -83,7 +86,7 @@ func (r *MercadoPagoRepository) MPStatePay(data *schemas.DataInfoPay, tenant *sc
 		Payer: &pb.PayerInfo{
 			FirstName: data.AditionalInfo.Payer.FirstName,
 			LastName:  data.AditionalInfo.Payer.LastName,
-			Email:     data.AditionalInfo.Payer.Email,
+			Email:     email,
 		},
 		OperationType:     data.OperationType,
 		Message:           data.Message,
@@ -107,7 +110,7 @@ func (r *MercadoPagoRepository) MPStatePay(data *schemas.DataInfoPay, tenant *sc
 	dataInfoPay.AdditionalInfo.Payer = &pb.PayerInfo{
 		FirstName: data.AditionalInfo.Payer.FirstName,
 		LastName:  data.AditionalInfo.Payer.LastName,
-		Email:     data.AditionalInfo.Payer.Email,
+		Email:     email,
 	}
 
 	_, err := r.Client.SyncPurchasePayment(outCtx, dataInfoPay)
